@@ -14,28 +14,6 @@ On first launch, choose **allow access to music** on the home screen. Album art 
 2. Open the downloaded file. Android will ask you to allow installs from your browser or file manager the first time; allow it, then tap **Install**.
 3. To update later, install the newer APK the same way. Your library, settings and queue are kept.
 
-Or use [Obtainium](https://github.com/ImranR98/Obtainium): add this repo's URL and it will offer updates as new releases appear.
-
-If you previously ran the app from Android Studio, uninstall that copy once first. It was signed with a different key, so Android won't let the release replace it.
-
-## Publishing a release
-
-GitHub builds a signed APK and publishes it as release `vX.Y.Z` when any of these happen:
-
-- In the **Actions** tab, open **Release APK**, click **Run workflow** and enter a version such as `0.3.1`. Leave the version empty for a test build you can download from the run.
-- A branch named `release/v0.3.1` is pushed.
-- A tag such as `v0.3.1` is pushed.
-
-This needs four repository secrets (Settings → Secrets and variables → Actions): `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD`. For local release builds, put the same values in a `keystore.properties` file at the project root (`storeFile=`, `storePassword=`, `keyAlias=`, `keyPassword=`); it's git-ignored. **Back up the keystore.** Without it you can't publish updates that install over existing copies.
-
-## Build from source
-
-1. **Enable USB debugging on the device:** Settings → About device → tap *Build number* seven times. Then go to Settings → System → Developer options and turn on **USB debugging**. Plug it in and accept the "Allow USB debugging" prompt.
-2. **Open the project:** in Android Studio, use *File → New → Project from Version Control* and paste this repo's URL, or *File → Open* this folder. Let Gradle sync finish. If it asks to install SDK Platform 35, say yes.
-3. Pick the Retroid in the device dropdown and press **Run ▶**.
-
-From the command line instead: `./gradlew installDebug`.
-
 ## Controls
 
 | Button | Browsing | Now Playing |
