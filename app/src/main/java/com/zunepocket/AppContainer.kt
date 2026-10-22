@@ -21,6 +21,7 @@ import com.zunepocket.ui.components.ArtLoader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -73,6 +74,16 @@ class AppContainer(private val context: Context) {
             val library = deviceRepository.library.first { it.songs.isNotEmpty() }
             devicePlayerLazy.value.restore(library)
         }
+    }
+
+    /** Progress/result of the last manual rescan (device music only). */
+    val rescanStatus: StateFlow<String?> get() = deviceRepository.rescanStatus
+
+    fun rescanMusic() {
+        if (settings.useSampleLibrary || !hasAudioPermission) return
+        artLoader.forgetMissing()
+        startDeviceLibrary()
+        deviceRepository.rescan()
     }
 
     /** Re-checks the permission, e.g. after the system dialog or returning from system settings. */

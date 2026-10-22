@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -30,6 +32,7 @@ private class SettingRow(val label: String, val value: String, val change: (step
 fun SettingsScreen(screen: Screen.Settings) {
     val app = LocalAppState.current
     val settings = app.settings
+    val rescanStatus by app.container.rescanStatus.collectAsState()
 
     val rows = listOf(
         SettingRow("music source", if (settings.useSampleLibrary) "sample music (silent demo)" else "your music") {
@@ -39,6 +42,14 @@ fun SettingsScreen(screen: Screen.Settings) {
             val all = Accent.entries
             settings.accent = all[(settings.accent.ordinal + step + all.size) % all.size]
         },
+        SettingRow(
+            "rescan music",
+            when {
+                settings.useSampleLibrary -> "only for your music, not the sample library"
+                !app.container.hasAudioPermission -> "allow access to music first"
+                else -> rescanStatus ?: "find songs newly added to this device"
+            },
+        ) { step -> if (step > 0) app.container.rescanMusic() },
         SettingRow("album view", settings.albumView.label) { step ->
             val all = AlbumView.entries
             settings.albumView = all[(settings.albumView.ordinal + step + all.size) % all.size]

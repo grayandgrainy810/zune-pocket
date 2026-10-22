@@ -31,6 +31,9 @@ class ArtLoader(private val context: Context) {
     }
     private val missing: MutableSet<Long> = Collections.synchronizedSet(HashSet())
 
+    /** Lets albums that had no artwork be checked again, e.g. after cover files were added. */
+    fun forgetMissing() = missing.clear()
+
     fun cached(source: ArtSource, large: Boolean): ImageBitmap? = cache.get(key(source, large))
 
     suspend fun load(source: ArtSource, large: Boolean): ImageBitmap? {

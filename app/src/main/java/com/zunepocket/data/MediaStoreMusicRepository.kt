@@ -3,9 +3,11 @@ package com.zunepocket.data
 import android.content.ContentUris
 import android.content.Context
 import android.database.ContentObserver
+import android.media.MediaScannerConnection
 import android.database.Cursor
 import android.os.Handler
 import android.os.Looper
+import android.os.storage.StorageManager
 import android.provider.MediaStore
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
@@ -16,7 +18,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.resume
 
 /**
  * The device's music, from every storage volume MediaStore has indexed (internal storage and SD card).
@@ -31,7 +37,17 @@ class MediaStoreMusicRepository(
     override val library: StateFlow<MusicLibrary> = _library.asStateFlow()
 
     private var scanJob: Job? = null
+    private var rescanJob: Job? = null
     private var observing = false
+
+    /** Paths MediaStore already knows, so a manual rescan only submits genuinely new files. */
+    @Volatile
+    private var knownPaths: Set<String> = emptySet()
+
+    private val _rescanStatus = MutableStateFlow<String?>(null)
+
+    /** Progress or result of the last manual rescan, for display in Settings. */
+    val rescanStatus: StateFlow<String?> = _rescanStatus.asStateFlow()
 
     private val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
         override fun onChange(selfChange: Boolean) {
@@ -53,8 +69,61 @@ class MediaStoreMusicRepository(
         scanJob?.cancel()
         scanJob = scope.launch {
             delay(delayMs)
-            val rows = withContext(Dispatchers.IO) { queryRows() }
-            _library.value = withContext(Dispatchers.Default) { MediaStoreMapper.build(rows) }
+            reload()
+        }
+    }
+
+    private suspend fun reload() {
+        val rows = withContext(Dispatchers.IO) { queryRows() }
+        knownPaths = rows.mapNotNullTo(HashSet()) { it.path }
+        _library.value = withContext(Dispatchers.Default) { MediaStoreMapper.build(rows) }
+    }
+
+    /**
+     * Manual rescan: finds audio files on every storage volume that MediaStore hasn't indexed yet
+     * (e.g. just copied over USB or on a newly inserted SD card), asks the system to index them,
+     * then reloads the library.
+     */
+    fun rescan() {
+        if (rescanJob?.isActive == true) return
+        rescanJob = scope.launch {
+            _rescanStatus.value = "looking for new music…"
+            val before = _library.value.songs.size
+            val newFiles = withContext(Dispatchers.IO) { findAudioFiles().filterNot { it in knownPaths } }
+            if (newFiles.isNotEmpty()) {
+                _rescanStatus.value = "adding ${newFiles.size} new files…"
+                withTimeoutOrNull(SCAN_TIMEOUT_MS) { indexFiles(newFiles) }
+            }
+            scanJob?.cancel()
+            reload()
+            val change = _library.value.songs.size - before
+            _rescanStatus.value = when {
+                change > 0 -> "found $change new ${if (change == 1) "song" else "songs"}"
+                change < 0 -> "${-change} songs no longer on the device"
+                else -> "no new music found"
+            }
+        }
+    }
+
+    private fun findAudioFiles(): List<String> {
+        val storage = context.getSystemService(StorageManager::class.java) ?: return emptyList()
+        val roots = storage.storageVolumes.mapNotNull { it.directory }
+        return roots.flatMap { root ->
+            runCatching {
+                root.walkTopDown()
+                    // Skip hidden folders and Android/ (app data, unreadable and never music).
+                    .onEnter { dir -> !dir.name.startsWith(".") && !(dir.parentFile == root && dir.name == "Android") }
+                    .filter { it.isFile && it.extension.lowercase() in AUDIO_EXTENSIONS }
+                    .map { it.path }
+                    .toList()
+            }.getOrDefault(emptyList())
+        }
+    }
+
+    private suspend fun indexFiles(paths: List<String>) = suspendCancellableCoroutine { cont ->
+        val remaining = AtomicInteger(paths.size)
+        MediaScannerConnection.scanFile(context, paths.toTypedArray(), null) { _, _ ->
+            if (remaining.decrementAndGet() == 0 && cont.isActive) cont.resume(Unit)
         }
     }
 
@@ -123,6 +192,8 @@ class MediaStoreMusicRepository(
 
     private companion object {
         const val TAG = "MediaStoreMusic"
+        const val SCAN_TIMEOUT_MS = 120_000L
+        val AUDIO_EXTENSIONS = setOf("mp3", "m4a", "aac", "flac", "ogg", "oga", "opus", "wav", "alac", "mp4", "3gp", "amr", "mka")
         val AUDIO_URI = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
     }
 }
