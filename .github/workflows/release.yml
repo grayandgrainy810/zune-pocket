@@ -1,11 +1,20 @@
 name: Release APK
 
-# Push a tag like v0.3.0 to build a signed APK and publish it as a GitHub Release.
-# "Run workflow" from the Actions tab builds one without publishing (download it from the run's artifacts).
+# Publishes a signed APK as GitHub Release vX.Y.Z when any of these happen:
+#   - a tag like v0.3.0 is pushed
+#   - a branch like release/v0.3.0 is pushed (GitHub creates the tag)
+#   - "Run workflow" is clicked in the Actions tab with a version filled in
+# "Run workflow" with the version left empty makes a test build (download it from the run's artifacts).
 on:
   push:
     tags: ["v*"]
+    branches: ["release/v*"]
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish, e.g. 0.3.1 (leave empty for a test build)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -23,12 +32,31 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v4
 
+      - name: Work out version
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#v}"
+          elif [[ "$GITHUB_REF" == refs/heads/release/v* ]]; then
+            VERSION="${GITHUB_REF_NAME#release/v}"
+          elif [ -n "$INPUT_VERSION" ]; then
+            VERSION="${INPUT_VERSION#v}"
+          fi
+          if [ -n "$VERSION" ]; then
+            echo "VERSION_NAME=$VERSION" >> "$GITHUB_ENV"
+            echo "PUBLISH=true" >> "$GITHUB_ENV"
+          else
+            echo "VERSION_NAME=0.0.0-test.${{ github.run_number }}" >> "$GITHUB_ENV"
+            echo "PUBLISH=false" >> "$GITHUB_ENV"
+          fi
+
       - name: Set up signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: |
           if [ -z "$KEYSTORE_BASE64" ]; then
-            if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            if [ "$PUBLISH" = "true" ]; then
               echo "::error::Add the KEYSTORE_BASE64, KEYSTORE_PASSWORD, KEY_ALIAS and KEY_PASSWORD secrets before publishing a release."
               exit 1
             fi
@@ -37,14 +65,6 @@ jobs:
           fi
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
           echo "ZP_KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
-
-      - name: Work out version
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            echo "VERSION_NAME=${GITHUB_REF_NAME#v}" >> "$GITHUB_ENV"
-          else
-            echo "VERSION_NAME=0.0.0-test.${{ github.run_number }}" >> "$GITHUB_ENV"
-          fi
 
       - name: Test and build
         env:
@@ -57,14 +77,17 @@ jobs:
           cp app/build/outputs/apk/release/app-release.apk "zune-pocket-$VERSION_NAME.apk"
 
       - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: env.PUBLISH == 'true'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ env.VERSION_NAME }}
+          target_commitish: ${{ github.sha }}
+          name: Zune Pocket ${{ env.VERSION_NAME }}
           files: zune-pocket-*.apk
           generate_release_notes: true
 
       - name: Keep test build
-        if: "!startsWith(github.ref, 'refs/tags/')"
+        if: env.PUBLISH != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: zune-pocket-apk

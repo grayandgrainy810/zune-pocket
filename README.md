@@ -20,12 +20,11 @@ If you previously ran the app from Android Studio, uninstall that copy once firs
 
 ## Publishing a release
 
-Every tag starting with `v` builds a signed APK on GitHub and attaches it to a release:
+GitHub builds a signed APK and publishes it as release `vX.Y.Z` when any of these happen:
 
-```
-git tag v0.3.0
-git push origin v0.3.0
-```
+- In the **Actions** tab, open **Release APK**, click **Run workflow** and enter a version such as `0.3.1`. Leave the version empty for a test build you can download from the run.
+- A branch named `release/v0.3.1` is pushed.
+- A tag such as `v0.3.1` is pushed.
 
 This needs four repository secrets (Settings → Secrets and variables → Actions): `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD`. For local release builds, put the same values in a `keystore.properties` file at the project root (`storeFile=`, `storePassword=`, `keyAlias=`, `keyPassword=`); it's git-ignored. **Back up the keystore.** Without it you can't publish updates that install over existing copies.
 
