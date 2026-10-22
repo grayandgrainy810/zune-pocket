@@ -54,6 +54,8 @@ jobs:
       - name: Set up signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
           if [ -z "$KEYSTORE_BASE64" ]; then
             if [ "$PUBLISH" = "true" ]; then
@@ -66,10 +68,24 @@ jobs:
           echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
           echo "ZP_KEYSTORE_PATH=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
 
+          # Use KEY_ALIAS if the keystore has a key by that name; otherwise, if it holds exactly one
+          # key, use that one (so a mistyped alias secret can't break the release).
+          keys=$(keytool -list -keystore "$RUNNER_TEMP/release.jks" -storepass "$KEYSTORE_PASSWORD" | grep PrivateKeyEntry | cut -d, -f1)
+          wanted=$(printf '%s' "$KEY_ALIAS" | tr -d '[:space:]"')
+          if printf '%s\n' "$keys" | grep -qxF "$wanted"; then
+            alias="$wanted"
+          elif [ "$(printf '%s\n' "$keys" | grep -c .)" = "1" ]; then
+            alias="$keys"
+            echo "::warning::KEY_ALIAS doesn't match the keystore; using its only key, '$alias'."
+          else
+            echo "::error::KEY_ALIAS doesn't match any key in the keystore. Keys found: $(printf '%s' "$keys" | paste -sd ' ' -)"
+            exit 1
+          fi
+          echo "ZP_KEY_ALIAS=$alias" >> "$GITHUB_ENV"
+
       - name: Test and build
         env:
           ZP_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          ZP_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           ZP_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           set -o pipefail
