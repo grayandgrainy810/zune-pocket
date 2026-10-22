@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -72,9 +72,20 @@ jobs:
           ZP_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           ZP_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
+          set -o pipefail
           ./gradlew --no-daemon testDebugUnitTest assembleRelease \
-            -PversionName="$VERSION_NAME" -PversionCode=$((100 + ${{ github.run_number }}))
+            -PversionName="$VERSION_NAME" -PversionCode=$((100 + ${{ github.run_number }})) 2>&1 | tee build.log
           cp app/build/outputs/apk/release/app-release.apk "zune-pocket-$VERSION_NAME.apk"
+
+      # Copies the key lines of a failed build into an error annotation, readable from the run summary.
+      - name: Report build errors
+        if: failure()
+        run: |
+          [ -f build.log ] || exit 0
+          summary=$( { grep -A12 "What went wrong" build.log; grep -E "^e: |FAILED|Error:|error:|Lint found" build.log; } | head -60 )
+          encoded=$(printf '%s' "$summary" | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')
+          echo "::error title=Build failed::$encoded"
+          for f in app/build/reports/lint-results-*.txt; do [ -f "$f" ] && head -40 "$f"; done
 
       - name: Publish release
         if: env.PUBLISH == 'true'

@@ -23,7 +23,7 @@ android {
     defaultConfig {
         applicationId = "com.zunepocket"
         minSdk = 33
-        targetSdk = 34
+        targetSdk = 35
         // CI passes these from the release tag; local builds use the defaults.
         versionCode = (findProperty("versionCode") as String?)?.toInt() ?: 3
         versionName = (findProperty("versionName") as String?) ?: "0.3.0"
