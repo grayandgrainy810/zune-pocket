@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import com.zunepocket.input.ActionHandlerEffect
 import com.zunepocket.input.AppAction
 import com.zunepocket.nav.Screen
+import com.zunepocket.settings.AlbumView
 import com.zunepocket.ui.LocalAppState
 import com.zunepocket.ui.components.PanoramaTitle
 import com.zunepocket.ui.components.ZuneList
@@ -37,6 +38,10 @@ fun SettingsScreen(screen: Screen.Settings) {
         SettingRow("accent color", settings.accent.label) { step ->
             val all = Accent.entries
             settings.accent = all[(settings.accent.ordinal + step + all.size) % all.size]
+        },
+        SettingRow("album view", settings.albumView.label) { step ->
+            val all = AlbumView.entries
+            settings.albumView = all[(settings.albumView.ordinal + step + all.size) % all.size]
         },
         SettingRow("confirm button", if (settings.swapConfirmBack) "B confirms, A goes back" else "A confirms, B goes back") {
             settings.swapConfirmBack = !settings.swapConfirmBack

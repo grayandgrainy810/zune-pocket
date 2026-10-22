@@ -31,6 +31,8 @@ From the command line instead: `./gradlew installDebug`.
 | Start | Play / pause, anywhere | Play / pause |
 | Select | Letter jump grid | Shuffle on/off |
 
+**Album view:** the albums tab can show a list, large tiles (2 per row) or small tiles (3 per row). Change it in Settings → album view, or press Y on an album → "view as…". In tile view, ←/→ move between tiles and switch pivot at the edge of a row.
+
 Hold any direction or shoulder button to repeat. If your Retroid is set to the swapped A/B layout, change **Settings → confirm button**.
 
 Touch works too: tap to open, swipe sideways to change pivot or track, and tap the art in Now Playing to pause.

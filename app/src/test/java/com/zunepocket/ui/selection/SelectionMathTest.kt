@@ -42,3 +42,42 @@ class SelectionMathTest {
         assertEquals(6, SelectionMath.indexForLetter('Z', size, letterAt))
     }
 }
+
+class GridSelectionMathTest {
+    // 3 columns, 8 items:
+    //   0 1 2
+    //   3 4 5
+    //   6 7
+    private val size = 8
+    private val columns = 3
+
+    @Test
+    fun `up and down move a row and stay put at the ends`() {
+        assertEquals(4, SelectionMath.gridDown(1, size, columns))
+        assertEquals(1, SelectionMath.gridUp(4, columns))
+        assertEquals(1, SelectionMath.gridUp(1, columns))
+        assertEquals(7, SelectionMath.gridDown(7, size, columns))
+    }
+
+    @Test
+    fun `down into a short last row lands on the last item`() {
+        assertEquals(7, SelectionMath.gridDown(5, size, columns))
+        assertEquals(6, SelectionMath.gridDown(3, size, columns))
+    }
+
+    @Test
+    fun `left and right return null at row edges`() {
+        assertEquals(null, SelectionMath.gridLeft(3, columns))
+        assertEquals(3, SelectionMath.gridLeft(4, columns))
+        assertEquals(null, SelectionMath.gridRight(5, size, columns))
+        assertEquals(5, SelectionMath.gridRight(4, size, columns))
+        assertEquals(null, SelectionMath.gridRight(7, size, columns))
+    }
+
+    @Test
+    fun `two column grid edges`() {
+        assertEquals(null, SelectionMath.gridLeft(2, 2))
+        assertEquals(null, SelectionMath.gridRight(3, 10, 2))
+        assertEquals(3, SelectionMath.gridRight(2, 10, 2))
+    }
+}

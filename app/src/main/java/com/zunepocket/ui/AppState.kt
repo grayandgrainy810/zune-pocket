@@ -96,7 +96,7 @@ class AppState(val container: AppContainer) {
         ),
     )
 
-    fun showAlbumMenu(album: Album, library: MusicLibrary) {
+    fun showAlbumMenu(album: Album, library: MusicLibrary, extra: List<MenuItem> = emptyList()) {
         val songs = library.songsOn(album.id)
         showMenu(
             album.title,
@@ -106,7 +106,7 @@ class AppState(val container: AppContainer) {
                 MenuItem("play next") { player.playNext(songs) },
                 MenuItem("add to now playing") { player.addToQueue(songs) },
                 MenuItem("go to artist") { open(Screen.ArtistDetail(album.artistId)) },
-            ),
+            ) + extra,
         )
     }
 

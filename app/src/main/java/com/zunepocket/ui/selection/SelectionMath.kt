@@ -39,5 +39,27 @@ object SelectionMath {
         return size - 1
     }
 
+    const val GRID_PAGE_ROWS = 3
+
+    fun gridUp(index: Int, columns: Int): Int = if (index - columns >= 0) index - columns else index
+
+    /** One row down; from the row above a short last row, lands on the last item. */
+    fun gridDown(index: Int, size: Int, columns: Int): Int {
+        if (size <= 0) return 0
+        val target = index + columns
+        return when {
+            target < size -> target
+            (size - 1) / columns > index / columns -> size - 1
+            else -> index
+        }
+    }
+
+    /** One tile left, or null at the start of a row (the screen switches pivot instead). */
+    fun gridLeft(index: Int, columns: Int): Int? = if (index % columns == 0) null else index - 1
+
+    /** One tile right, or null at the end of a row or of the list. */
+    fun gridRight(index: Int, size: Int, columns: Int): Int? =
+        if (index % columns == columns - 1 || index >= size - 1) null else index + 1
+
     private fun rank(c: Char): Int = if (c == '#') 0 else c - 'A' + 1
 }
