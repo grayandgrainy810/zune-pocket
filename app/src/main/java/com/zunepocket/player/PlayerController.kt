@@ -12,6 +12,7 @@ interface PlayerController {
 
     fun play(songs: List<Song>, startIndex: Int = 0)
     fun toggle()
+    fun pause()
     fun next()
     fun previous()
     fun seekBy(deltaMs: Long)

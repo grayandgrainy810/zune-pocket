@@ -31,7 +31,12 @@ class KeyBindings(private val swapConfirmBack: () -> Boolean = { false }) {
 
         KeyEvent.KEYCODE_BUTTON_START,
         KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+        KeyEvent.KEYCODE_MEDIA_PLAY,
+        KeyEvent.KEYCODE_MEDIA_PAUSE,
+        KeyEvent.KEYCODE_HEADSETHOOK,
         KeyEvent.KEYCODE_SPACE -> AppAction.PlayPause
+        KeyEvent.KEYCODE_MEDIA_NEXT -> AppAction.NextTrack
+        KeyEvent.KEYCODE_MEDIA_PREVIOUS -> AppAction.PreviousTrack
         KeyEvent.KEYCODE_BUTTON_SELECT -> AppAction.JumpList
 
         else -> null

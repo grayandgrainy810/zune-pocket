@@ -54,6 +54,10 @@ class FakePlayerController(
         _state.value = s.copy(isPlaying = !s.isPlaying)
     }
 
+    override fun pause() {
+        _state.value = _state.value.copy(isPlaying = false)
+    }
+
     override fun next() {
         val s = _state.value
         when {

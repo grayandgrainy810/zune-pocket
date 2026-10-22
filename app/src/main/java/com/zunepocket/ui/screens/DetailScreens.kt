@@ -84,8 +84,8 @@ fun ArtistScreen(screen: Screen.ArtistDetail, library: MusicLibrary) {
                     ZuneListRow(
                         album.title,
                         selected,
-                        secondary = "${album.year}",
-                        leading = { AlbumArt(album.artSeed, Modifier.size(72.dp)) },
+                        secondary = if (album.year > 0) "${album.year}" else null,
+                        leading = { AlbumArt(album.artSeed, Modifier.size(72.dp), album.art) },
                     )
                 }
             } else {
@@ -120,11 +120,11 @@ fun AlbumScreen(screen: Screen.AlbumDetail, library: MusicLibrary) {
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalAlignment = Alignment.Bottom,
         ) {
-            AlbumArt(album.artSeed, Modifier.size(120.dp))
+            AlbumArt(album.artSeed, Modifier.size(120.dp), album.art)
             Column {
                 Text(album.title.lowercase(), style = ZuneType.ListPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(album.artistName.lowercase(), style = ZuneType.Body, color = accent, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text("${album.year} · ${songs.size} songs", style = ZuneType.Caption, color = ZuneColors.Secondary)
+                Text(listOfNotNull(album.year.takeIf { it > 0 }, "${songs.size} songs").joinToString(" · "), style = ZuneType.Caption, color = ZuneColors.Secondary)
             }
         }
         ZuneList(songs, screen.selection, { app.play(songs, it) }, Modifier.fillMaxSize(), key = Song::id) { song, selected ->

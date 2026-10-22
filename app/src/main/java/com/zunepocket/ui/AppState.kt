@@ -38,6 +38,15 @@ class AppState(val container: AppContainer) {
     var overlay by mutableStateOf<Overlay?>(null)
         private set
 
+    /** Set by MainActivity: shows the system dialog for music access. */
+    var requestMusicPermission: () -> Unit = {}
+
+    /** Set by MainActivity: opens this app's system settings page (after a permanent denial). */
+    var openAppSettings: () -> Unit = {}
+
+    /** True once the user has denied the permission dialog, so we offer system settings instead. */
+    var permissionDenied by mutableStateOf(false)
+
     fun open(screen: Screen) = navigator.push(screen)
 
     fun openNowPlaying() {

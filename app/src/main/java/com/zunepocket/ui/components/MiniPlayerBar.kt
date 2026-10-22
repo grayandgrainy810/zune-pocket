@@ -33,7 +33,7 @@ fun MiniPlayerBar(modifier: Modifier = Modifier) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        AlbumArt(song.artSeed, Modifier.size(40.dp))
+        AlbumArt(song.artSeed, Modifier.size(40.dp), song.art)
         Column(Modifier.weight(1f)) {
             Text(song.title, style = ZuneType.Body, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(song.artistName.lowercase(), style = ZuneType.Caption, color = ZuneColors.Secondary, maxLines = 1, overflow = TextOverflow.Ellipsis)

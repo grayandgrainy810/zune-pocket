@@ -23,6 +23,7 @@ import com.zunepocket.input.LocalInputRouter
 import com.zunepocket.nav.Screen
 import com.zunepocket.ui.AppState
 import com.zunepocket.ui.LocalAppState
+import com.zunepocket.ui.components.LocalArtLoader
 import com.zunepocket.ui.components.MiniPlayerBar
 import com.zunepocket.ui.components.OverlayHost
 import com.zunepocket.ui.theme.ZuneColors
@@ -35,12 +36,15 @@ fun AppRoot(app: AppState, onExit: () -> Unit) {
         CompositionLocalProvider(
             LocalInputRouter provides app.container.inputRouter,
             LocalAppState provides app,
+            LocalArtLoader provides app.container.artLoader,
         ) {
             // Global bindings: the bottom of the handler stack, reached when no screen consumes an action.
             ActionHandlerEffect { action ->
                 when (action) {
                     AppAction.PlayPause -> app.player.toggle()
                     AppAction.NowPlaying -> app.openNowPlaying()
+                    AppAction.NextTrack -> app.player.next()
+                    AppAction.PreviousTrack -> app.player.previous()
                     AppAction.Back -> if (!app.navigator.pop()) onExit()
                     else -> return@ActionHandlerEffect false
                 }

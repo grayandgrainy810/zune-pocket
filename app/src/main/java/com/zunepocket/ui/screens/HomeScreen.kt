@@ -35,7 +35,13 @@ fun HomeScreen(screen: Screen.Home, library: MusicLibrary) {
     val playback by app.player.state.collectAsState()
     val current = playback.current
 
-    val items = listOf(
+    val needsPermission = !app.settings.useSampleLibrary && !app.container.hasAudioPermission
+    val items = listOfNotNull(
+        when {
+            !needsPermission -> null
+            app.permissionDenied -> HomeItem("allow music in settings") { app.openAppSettings() }
+            else -> HomeItem("allow access to music") { app.requestMusicPermission() }
+        },
         HomeItem("music") { app.open(Screen.Library(LibraryTab.Artists)) },
         HomeItem("playlists") { app.open(Screen.Library(LibraryTab.Playlists)) },
         HomeItem("now playing", enabled = current != null) { app.openNowPlaying() },
@@ -58,7 +64,7 @@ fun HomeScreen(screen: Screen.Home, library: MusicLibrary) {
 
     Box(Modifier.fillMaxSize()) {
         if (current != null) {
-            AlbumArt(current.artSeed, Modifier.fillMaxSize().kenBurns().alpha(0.22f))
+            AlbumArt(current.artSeed, Modifier.fillMaxSize().kenBurns().alpha(0.22f), current.art, large = true)
         }
         Column(Modifier.fillMaxSize()) {
             Text(

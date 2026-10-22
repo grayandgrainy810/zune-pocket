@@ -12,7 +12,7 @@ class MusicLibrary(
     private val albumsById by lazy { albums.associateBy { it.id } }
     private val songsById by lazy { songs.associateBy { it.id } }
     private val songsByAlbum by lazy {
-        songs.groupBy { it.albumId }.mapValues { (_, list) -> list.sortedBy { it.track } }
+        songs.groupBy { it.albumId }.mapValues { (_, list) -> list.sortedWith(compareBy({ it.disc }, { it.track })) }
     }
     private val albumsByArtist by lazy {
         albums.groupBy { it.artistId }.mapValues { (_, list) -> list.sortedBy { it.year } }
@@ -20,6 +20,7 @@ class MusicLibrary(
 
     fun artist(id: Long): Artist? = artistsById[id]
     fun album(id: Long): Album? = albumsById[id]
+    fun song(id: Long): Song? = songsById[id]
 
     fun albumsBy(artistId: Long): List<Album> = albumsByArtist[artistId].orEmpty()
     fun songsOn(albumId: Long): List<Song> = songsByAlbum[albumId].orEmpty()

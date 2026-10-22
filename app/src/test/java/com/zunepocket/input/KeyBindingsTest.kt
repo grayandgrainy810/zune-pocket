@@ -47,6 +47,14 @@ class KeyBindingsTest {
     }
 
     @Test
+    fun `media keys control playback`() {
+        val bindings = KeyBindings()
+        assertEquals(AppAction.NextTrack, bindings.map(KeyEvent.KEYCODE_MEDIA_NEXT))
+        assertEquals(AppAction.PreviousTrack, bindings.map(KeyEvent.KEYCODE_MEDIA_PREVIOUS))
+        assertEquals(AppAction.PlayPause, bindings.map(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE))
+    }
+
+    @Test
     fun `volume keys are left to the system`() {
         val bindings = KeyBindings()
         assertNull(bindings.map(KeyEvent.KEYCODE_VOLUME_UP))

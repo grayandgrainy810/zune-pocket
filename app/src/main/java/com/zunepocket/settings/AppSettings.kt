@@ -35,9 +35,19 @@ class AppSettings(context: Context) {
             prefs.edit().putBoolean(KEY_SCREEN_ON, value).apply()
         }
 
+    /** Sample music and a silent player, for trying the UI without a music library. */
+    private var _useSampleLibrary by mutableStateOf(prefs.getBoolean(KEY_SAMPLE, false))
+    var useSampleLibrary: Boolean
+        get() = _useSampleLibrary
+        set(value) {
+            _useSampleLibrary = value
+            prefs.edit().putBoolean(KEY_SAMPLE, value).apply()
+        }
+
     private companion object {
         const val KEY_ACCENT = "accent"
         const val KEY_SWAP = "swap_confirm_back"
         const val KEY_SCREEN_ON = "keep_screen_on"
+        const val KEY_SAMPLE = "use_sample_library"
     }
 }

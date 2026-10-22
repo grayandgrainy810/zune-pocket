@@ -2,7 +2,11 @@
 
 A Zune-style music player for the **Retroid Pocket Classic**, designed for its physical buttons first and touch second.
 
-> **Status: UI prototype.** The library is generated sample music (fictional artists, generated cover art) and the player is simulated: it ticks along but makes no sound. Real library scanning and audio playback (Media3) come in phase 2.
+It plays the music already on your device, from both internal storage and the SD card. Supported formats are the ones Android decodes itself: MP3, AAC/M4A, FLAC, OGG/Vorbis, Opus, WAV and ALAC. Playback continues in the background, with a notification and lock-screen controls, and the app picks up your last queue where you left off.
+
+On first launch, choose **allow access to music** on the home screen. Album art comes from the files' embedded art or a `cover.jpg` / `folder.jpg` in the album folder. Albums without art get generated art.
+
+**Settings → music source** switches to a built-in sample library with a silent player, for trying the UI without any music on the device.
 
 ## Run it on your Retroid
 
@@ -40,8 +44,10 @@ Go to **Settings → key tester** and press every button. Each press shows the A
 ```
 app/src/main/java/com/zunepocket/
   input/      KeyBindings (key → action), InputRouter (handler stack + auto-repeat)
-  data/       models, MusicLibrary, FakeMusicRepository (sample data)
-  player/     PlayerController interface, FakePlayerController (simulated)
+  data/       models, MusicLibrary, MediaStoreMusicRepository + MediaStoreMapper (device music),
+              FakeMusicRepository (sample data)
+  player/     PlayerController, Media3PlayerController + PlaybackService (real audio),
+              FakePlayerController (silent sample player)
   nav/        Screen back-stack entries (each owns its selection state), Navigator
   ui/         AppState, theme (Selawik font, accent colours), components, screens
 ```

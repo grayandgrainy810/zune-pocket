@@ -31,6 +31,9 @@ fun SettingsScreen(screen: Screen.Settings) {
     val settings = app.settings
 
     val rows = listOf(
+        SettingRow("music source", if (settings.useSampleLibrary) "sample music (silent demo)" else "your music") {
+            settings.useSampleLibrary = !settings.useSampleLibrary
+        },
         SettingRow("accent color", settings.accent.label) { step ->
             val all = Accent.entries
             settings.accent = all[(settings.accent.ordinal + step + all.size) % all.size]
@@ -42,7 +45,7 @@ fun SettingsScreen(screen: Screen.Settings) {
             settings.keepScreenOn = !settings.keepScreenOn
         },
         SettingRow("key tester", "see what each button sends") { app.open(Screen.KeyTester()) },
-        SettingRow("about", "zune pocket 0.1 · prototype with sample music") {},
+        SettingRow("about", "zune pocket 0.2") {},
     )
 
     ActionHandlerEffect { action ->

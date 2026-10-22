@@ -74,26 +74,32 @@ fun LibraryScreen(screen: Screen.Library, library: MusicLibrary) {
             label = "libraryTab",
         ) { shownTab ->
             val shownSelection = screen.selections[shownTab.ordinal]
+            val emptyText = when {
+                shownTab == LibraryTab.Playlists && !app.settings.useSampleLibrary -> "playlists are coming soon"
+                library.songs.isEmpty() && !app.container.hasAudioPermission -> "allow access to music from the home screen"
+                library.songs.isEmpty() -> "no music found. copy songs to your sd card or internal storage"
+                else -> "nothing here yet"
+            }
             val onActivate = { i: Int -> activate(app, shownTab, library, i) }
             when (shownTab) {
-                LibraryTab.Artists -> TabList(library.artists, shownSelection, onActivate, Artist::id) { artist, selected ->
+                LibraryTab.Artists -> TabList(library.artists, shownSelection, onActivate, Artist::id, emptyText) { artist, selected ->
                     ZuneListRow(artist.name, selected)
                 }
-                LibraryTab.Albums -> TabList(library.albums, shownSelection, onActivate, Album::id) { album, selected ->
+                LibraryTab.Albums -> TabList(library.albums, shownSelection, onActivate, Album::id, emptyText) { album, selected ->
                     ZuneListRow(
                         album.title,
                         selected,
                         secondary = album.artistName,
-                        leading = { AlbumArt(album.artSeed, Modifier.size(56.dp)) },
+                        leading = { AlbumArt(album.artSeed, Modifier.size(56.dp), album.art) },
                     )
                 }
-                LibraryTab.Songs -> TabList(library.songs, shownSelection, onActivate, Song::id) { song, selected ->
+                LibraryTab.Songs -> TabList(library.songs, shownSelection, onActivate, Song::id, emptyText) { song, selected ->
                     ZuneListRow(song.title, selected, secondary = song.artistName)
                 }
-                LibraryTab.Genres -> TabList(library.genres, shownSelection, onActivate, Genre::name) { genre, selected ->
+                LibraryTab.Genres -> TabList(library.genres, shownSelection, onActivate, Genre::name, emptyText) { genre, selected ->
                     ZuneListRow(genre.name.lowercase(), selected, secondary = "${genre.songCount} songs")
                 }
-                LibraryTab.Playlists -> TabList(library.playlists, shownSelection, onActivate, Playlist::id) { playlist, selected ->
+                LibraryTab.Playlists -> TabList(library.playlists, shownSelection, onActivate, Playlist::id, emptyText) { playlist, selected ->
                     ZuneListRow(playlist.name.lowercase(), selected, secondary = "${playlist.songIds.size} songs")
                 }
             }
@@ -107,10 +113,11 @@ private fun <T : Any> TabList(
     selection: ListSelection,
     onActivate: (Int) -> Unit,
     key: (T) -> Any,
+    emptyText: String,
     row: @Composable (T, Boolean) -> Unit,
 ) {
     if (items.isEmpty()) {
-        EmptyMessage("nothing here yet")
+        EmptyMessage(emptyText)
     } else {
         ZuneList(items, selection, onActivate, Modifier.fillMaxSize(), key = key, itemContent = row)
     }

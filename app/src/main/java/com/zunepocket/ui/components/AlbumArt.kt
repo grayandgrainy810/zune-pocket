@@ -6,9 +6,13 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -20,6 +24,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import com.zunepocket.data.ArtSource
 import kotlin.math.PI
 import kotlin.math.max
 import kotlin.math.min
@@ -27,11 +33,30 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 /**
- * Placeholder album art generated from a seed, so the prototype ships no copyrighted images.
- * Phase 2 shows embedded or folder artwork instead and keeps this as the fallback.
+ * Album artwork. Shows art generated from [seed] immediately, then fades to the real artwork from
+ * [source] once [ArtLoader] finds it. Sample music (null [source]) keeps the generated art.
+ * [large] loads a full-screen-sized image for Now Playing.
  */
 @Composable
-fun AlbumArt(seed: Long, modifier: Modifier = Modifier) {
+fun AlbumArt(seed: Long, modifier: Modifier = Modifier, source: ArtSource? = null, large: Boolean = false) {
+    val loader = LocalArtLoader.current
+    val image by produceState(source?.let { loader?.cached(it, large) }, source, large, loader) {
+        if (value == null && source != null && loader != null) value = loader.load(source, large)
+    }
+    Box(modifier) {
+        Crossfade(targetState = image, animationSpec = tween(250), label = "albumArt") { bitmap ->
+            if (bitmap != null) {
+                Image(bitmap, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize())
+            } else {
+                GeneratedArt(seed, Modifier.matchParentSize())
+            }
+        }
+    }
+}
+
+/** Placeholder art generated from a seed, so the app ships no copyrighted images. */
+@Composable
+private fun GeneratedArt(seed: Long, modifier: Modifier) {
     val spec = remember(seed) { ArtSpec(seed) }
     Canvas(modifier) { drawArt(spec) }
 }

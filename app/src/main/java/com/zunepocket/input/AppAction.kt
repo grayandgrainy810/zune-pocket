@@ -8,4 +8,5 @@ enum class AppAction {
     PageUp, PageDown,
     PrevGroup, NextGroup,
     PlayPause, JumpList,
+    NextTrack, PreviousTrack,
 }

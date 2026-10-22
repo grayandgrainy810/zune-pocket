@@ -101,12 +101,13 @@ fun NowPlayingScreen() {
             }
             .pointerInput(Unit) { detectTapGestures { player.toggle() } },
     ) {
+        // Keyed by album, so consecutive tracks from one album don't re-fade the same art.
         AnimatedContent(
-            targetState = song.artSeed,
+            targetState = song.artSeed to song.art,
             transitionSpec = { fadeIn(tween(600)) togetherWith fadeOut(tween(600)) },
             label = "nowPlayingArt",
-        ) { seed ->
-            AlbumArt(seed, Modifier.fillMaxSize().kenBurns())
+        ) { (seed, art) ->
+            AlbumArt(seed, Modifier.fillMaxSize().kenBurns(), art, large = true)
         }
         Box(
             Modifier

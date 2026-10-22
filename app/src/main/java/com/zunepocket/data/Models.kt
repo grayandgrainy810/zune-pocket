@@ -2,7 +2,10 @@ package com.zunepocket.data
 
 data class Artist(val id: Long, val name: String)
 
-/** [artSeed] drives generated placeholder art; real artwork arrives with the MediaStore repository. */
+/** Where to look for an album's real artwork. Null for sample music, which uses generated art. */
+data class ArtSource(val albumId: Long, val firstTrackUri: String, val folder: String?)
+
+/** [artSeed] drives the generated placeholder art shown until (or instead of) real artwork. */
 data class Album(
     val id: Long,
     val title: String,
@@ -11,6 +14,7 @@ data class Album(
     val year: Int,
     val genre: String,
     val artSeed: Long,
+    val art: ArtSource? = null,
 )
 
 data class Song(
@@ -24,6 +28,10 @@ data class Song(
     val durationMs: Long,
     val genre: String,
     val artSeed: Long,
+    val disc: Int = 0,
+    /** Content URI to play; empty for sample music. */
+    val uri: String = "",
+    val art: ArtSource? = null,
 )
 
 data class Genre(val name: String, val songCount: Int)
