@@ -83,7 +83,7 @@ class ArtLoader(private val context: Context) {
     private fun key(source: ArtSource, large: Boolean) = "${source.albumId}:${if (large) "L" else "S"}"
 
     private companion object {
-        const val CACHE_BYTES = 32 * 1024 * 1024
+        const val CACHE_BYTES = 64 * 1024 * 1024
         const val SMALL_PX = 256
         const val LARGE_PX = 1080
         val COVER_NAMES = listOf("cover.jpg", "folder.jpg", "front.jpg", "cover.png", "folder.png", "Cover.jpg", "Folder.jpg", "AlbumArt.jpg")

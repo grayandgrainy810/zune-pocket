@@ -9,6 +9,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,9 +35,9 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 /**
- * Album artwork. Shows art generated from [seed] immediately, then fades to the real artwork from
- * [source] once [ArtLoader] finds it. Sample music (null [source]) keeps the generated art.
- * [large] loads a full-screen-sized image for Now Playing.
+ * Album artwork. For your music ([source] set), shows a plain dark square until [ArtLoader] finds
+ * the real cover, and keeps it if there is none. Sample music (null [source]) uses art generated
+ * from [seed]. [large] loads a full-screen-sized image for Now Playing.
  */
 @Composable
 fun AlbumArt(seed: Long, modifier: Modifier = Modifier, source: ArtSource? = null, large: Boolean = false) {
@@ -46,13 +48,15 @@ fun AlbumArt(seed: Long, modifier: Modifier = Modifier, source: ArtSource? = nul
     // The Crossfade itself must carry the size: its own container wraps its content, so children
     // using matchParentSize inside it would be laid out at 0x0.
     Crossfade(targetState = image, modifier = modifier, animationSpec = tween(250), label = "albumArt") { bitmap ->
-        if (bitmap != null) {
-            Image(bitmap, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
-        } else {
-            GeneratedArt(seed, Modifier.fillMaxSize())
+        when {
+            bitmap != null -> Image(bitmap, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            source != null -> Box(Modifier.fillMaxSize().background(NO_ART_COLOR))
+            else -> GeneratedArt(seed, Modifier.fillMaxSize())
         }
     }
 }
+
+private val NO_ART_COLOR = Color(0xFF1C1C1C)
 
 /** Placeholder art generated from a seed, so the app ships no copyrighted images. */
 @Composable
