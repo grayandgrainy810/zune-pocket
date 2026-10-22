@@ -34,7 +34,7 @@ android {
             create("release") {
                 storeFile = releaseStoreFile
                 storePassword = signingValue("storePassword", "ZP_KEYSTORE_PASSWORD")
-                keyAlias = signingValue("keyAlias", "ZP_KEY_ALIAS")
+                keyAlias = signingValue("keyAlias", "ZP_KEY_ALIAS")?.trim()
                 keyPassword = signingValue("keyPassword", "ZP_KEY_PASSWORD")
             }
         }

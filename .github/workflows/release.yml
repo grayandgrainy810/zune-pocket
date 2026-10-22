@@ -80,7 +80,14 @@ jobs:
       # Copies the key lines of a failed build into an error annotation, readable from the run summary.
       - name: Report build errors
         if: failure()
+        env:
+          ZP_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
+          # Signing problems: list the key names actually in the keystore (names aren't secret).
+          if [ -n "$ZP_KEYSTORE_PATH" ] && [ -f "$ZP_KEYSTORE_PATH" ]; then
+            aliases=$(keytool -list -keystore "$ZP_KEYSTORE_PATH" -storepass "$ZP_KEYSTORE_PASSWORD" 2>&1 | grep -iE "PrivateKeyEntry|password|error" | cut -d, -f1 | paste -sd ';' -)
+            echo "::error title=Keys in your keystore::$aliases"
+          fi
           [ -f build.log ] || exit 0
           summary=$( { grep -A12 "What went wrong" build.log; grep -E "^e: |FAILED|Error:|error:|Lint found" build.log; } | head -60 )
           encoded=$(printf '%s' "$summary" | sed ':a;N;$!ba;s/%/%25/g;s/\r/%0D/g;s/\n/%0A/g')
