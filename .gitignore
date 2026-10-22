@@ -10,3 +10,7 @@
 .cxx/
 *.apk
 *.aab
+# Release signing — keep these out of git
+keystore.properties
+*.jks
+*.keystore

@@ -8,7 +8,28 @@ On first launch, choose **allow access to music** on the home screen. Album art 
 
 **Settings → music source** switches to a built-in sample library with a silent player, for trying the UI without any music on the device.
 
-## Run it on your Retroid
+## Install (no Play Store)
+
+1. On the device, open this repo's **Releases** page and download the latest `zune-pocket-x.y.z.apk`.
+2. Open the downloaded file. Android will ask you to allow installs from your browser or file manager the first time; allow it, then tap **Install**.
+3. To update later, install the newer APK the same way. Your library, settings and queue are kept.
+
+Or use [Obtainium](https://github.com/ImranR98/Obtainium): add this repo's URL and it will offer updates as new releases appear.
+
+If you previously ran the app from Android Studio, uninstall that copy once first. It was signed with a different key, so Android won't let the release replace it.
+
+## Publishing a release
+
+Every tag starting with `v` builds a signed APK on GitHub and attaches it to a release:
+
+```
+git tag v0.3.0
+git push origin v0.3.0
+```
+
+This needs four repository secrets (Settings → Secrets and variables → Actions): `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD`. For local release builds, put the same values in a `keystore.properties` file at the project root (`storeFile=`, `storePassword=`, `keyAlias=`, `keyPassword=`); it's git-ignored. **Back up the keystore.** Without it you can't publish updates that install over existing copies.
+
+## Build from source
 
 1. **Enable USB debugging on the device:** Settings → About device → tap *Build number* seven times. Then go to Settings → System → Developer options and turn on **USB debugging**. Plug it in and accept the "Allow USB debugging" prompt.
 2. **Open the project:** in Android Studio, use *File → New → Project from Version Control* and paste this repo's URL, or *File → Open* this folder. Let Gradle sync finish. If it asks to install SDK Platform 35, say yes.
