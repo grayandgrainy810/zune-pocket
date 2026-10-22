@@ -9,7 +9,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
@@ -43,13 +43,13 @@ fun AlbumArt(seed: Long, modifier: Modifier = Modifier, source: ArtSource? = nul
     val image by produceState(source?.let { loader?.cached(it, large) }, source, large, loader) {
         if (value == null && source != null && loader != null) value = loader.load(source, large)
     }
-    Box(modifier) {
-        Crossfade(targetState = image, animationSpec = tween(250), label = "albumArt") { bitmap ->
-            if (bitmap != null) {
-                Image(bitmap, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.matchParentSize())
-            } else {
-                GeneratedArt(seed, Modifier.matchParentSize())
-            }
+    // The Crossfade itself must carry the size: its own container wraps its content, so children
+    // using matchParentSize inside it would be laid out at 0x0.
+    Crossfade(targetState = image, modifier = modifier, animationSpec = tween(250), label = "albumArt") { bitmap ->
+        if (bitmap != null) {
+            Image(bitmap, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+        } else {
+            GeneratedArt(seed, Modifier.fillMaxSize())
         }
     }
 }
@@ -95,6 +95,8 @@ private fun DrawScope.drawArt(spec: ArtSpec) {
     val w = size.width
     val h = size.height
     val m = min(w, h)
+    // Every loop below steps by a fraction of the size, so a zero-sized canvas would never finish.
+    if (m < 1f) return
     val v = spec.values
     drawRect(Brush.linearGradient(listOf(spec.background1, spec.background2), Offset.Zero, Offset(w, h)))
 
@@ -109,7 +111,7 @@ private fun DrawScope.drawArt(spec: ArtSpec) {
             var gap = m * 0.02f
             while (y < h) {
                 drawRect(spec.accent.copy(alpha = 0.55f), Offset(0f, y), Size(w, gap * 0.6f))
-                y += gap * 2
+                y += max(1f, gap * 2)
                 gap *= 1.25f
             }
         }
@@ -134,7 +136,7 @@ private fun DrawScope.drawArt(spec: ArtSpec) {
             var i = 0
             while (x < w * 2) {
                 drawRect(spec.accent.copy(alpha = 0.1f + v[i % 32] * 0.5f), Offset(x, -h), Size(stripe, h * 3))
-                x += stripe * (1.5f + v[(i + 7) % 32] * 2f)
+                x += max(1f, stripe * (1.5f + v[(i + 7) % 32] * 2f))
                 i++
             }
         }
@@ -163,7 +165,7 @@ private fun DrawScope.drawArt(spec: ArtSpec) {
                     var x = 0f
                     while (x <= w) {
                         lineTo(x, baseY + amp * sin(phase + freq * 2f * PI.toFloat() * x / w))
-                        x += w / 48f
+                        x += max(1f, w / 48f)
                     }
                     lineTo(w, h)
                     close()
